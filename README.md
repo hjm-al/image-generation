@@ -2,6 +2,8 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
+[![validate](https://github.com/hjm-al/image-generation/actions/workflows/validate.yml/badge.svg)](https://github.com/hjm-al/image-generation/actions/workflows/validate.yml)
+
 An independent Codex skill for generating and editing images through OpenAI-compatible Images APIs. It handles prompt preparation, safe credential loading, response normalization, local file writing, format detection, dimensions, and metadata.
 
 ## Features
@@ -23,6 +25,19 @@ An independent Codex skill for generating and editing images through OpenAI-comp
 - Track reusable prompt revisions with coded quality events, prompt hashes, and regression checks.
 - Run offline tests without making network requests.
 
+## Requirements
+
+- Python 3.10 or newer.
+- No third-party packages; the helpers, batch runner, quality logger, and tests use the Python standard library.
+- Network access and provider credentials are needed only for billable generate or edit requests.
+
+## Cost and Network Behavior
+
+- `--dry-run` prints the planned request without reading the API key, using the network, or incurring cost.
+- The test suite and every `quality_log.py` command are offline.
+- `generate`, `edit`, and a batch run without `--dry-run` call the configured provider and may incur charges.
+- One batch item makes one API request; `n` is the requested image count within that request. The helper never retries or switches models automatically.
+
 ## Install
 
 Clone the repository, then copy it to the Codex skills directory:
@@ -36,6 +51,25 @@ Copy-Item -Path (Join-Path $source "*") -Destination $target -Recurse -Force
 ```
 
 In Codex, invoke it explicitly with `$image-generation`; this is a skill reference, not PowerShell variable expansion. Codex can also select it from the description.
+
+## Update or Remove
+
+Refresh a cloned copy and the installed skill:
+
+```powershell
+git -C .\image-generation pull --ff-only
+$source = Join-Path $PWD "image-generation"
+$target = Join-Path $HOME ".codex\skills\image-generation"
+New-Item -ItemType Directory -Force $target | Out-Null
+Copy-Item -Path (Join-Path $source "*") -Destination $target -Recurse -Force
+```
+
+This copies current files but does not delete files removed upstream. Review local changes before replacing the installed directory for a clean install. Remove the skill with:
+
+```powershell
+$target = Join-Path $HOME ".codex\skills\image-generation"
+Remove-Item -LiteralPath $target -Recurse -Force
+```
 
 ## Configure
 
@@ -192,20 +226,25 @@ If the provider returns a different format, the helper changes the output extens
 - Signed image URLs are downloaded without the API key. If a provider requires authenticated downloads, request a base64 response instead.
 - Provider-specific model names, sizes, quality values, and response formats remain the provider's responsibility.
 
-## Test
+## Development and Verification
 
 ```powershell
 python -m unittest discover -s tests -v
 python -m py_compile .\scripts\image_api.py .\scripts\image_batch.py .\scripts\quality_log.py
 ```
 
-The tests do not call external services and incur no cost.
+The tests do not call external services and incur no cost. CI checks Python 3.10 and 3.12. See [CONTRIBUTING.md](CONTRIBUTING.md) for development and pull request guidance.
+
+## Contributing
+
+Use the issue and pull request templates, keep live-provider checks out of automated tests, and run the offline verification commands above before opening a pull request. Participation follows [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Security
 
 - Do not commit `.env`, API keys, private reference images, or generated client work.
 - Do not pass secrets with `--api-key`; use environment variables.
 - Review the prompt before sending confidential material to a third-party API.
+- Report vulnerabilities using [SECURITY.md](SECURITY.md), not a public issue.
 
 ## License
 

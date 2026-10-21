@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security policy
+    url: https://github.com/hjm-al/image-generation/security/policy
+    about: Read the private reporting guidance before sharing vulnerability details.
+  - name: Contributing guide
+    url: https://github.com/hjm-al/image-generation/blob/main/CONTRIBUTING.md
+    about: Review development, testing, and pull request expectations.

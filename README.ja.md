@@ -2,6 +2,8 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
+[![validate](https://github.com/hjm-al/image-generation/actions/workflows/validate.yml/badge.svg)](https://github.com/hjm-al/image-generation/actions/workflows/validate.yml)
+
 OpenAI 互換の Images API を通じて画像を生成・編集するための独立した Codex スキルです。プロンプトの準備、認証情報の安全な読み込み、レスポンスの正規化、ローカルファイルへの書き込み、形式の検出、寸法の取得、メタデータの記録を担当します。
 
 ## 機能
@@ -23,6 +25,19 @@ OpenAI 互換の Images API を通じて画像を生成・編集するための�
 - コード化された品質イベント、プロンプトハッシュ、回帰チェックで再利用可能なプロンプト改訂を追跡します。
 - ネットワークリクエストを行わずにオフラインテストを実行します。
 
+## 要件
+
+- Python 3.10 以降。
+- サードパーティ製パッケージは不要です。ヘルパー、バッチランナー、品質ログ、テストは Python 標準ライブラリのみを使用します。
+- ネットワークアクセスとプロバイダーの認証情報は、課金対象の生成または編集リクエストにのみ必要です。
+
+## 費用とネットワーク動作
+
+- `--dry-run` は計画したリクエストを表示するだけで、API キーの読み込み、ネットワーク利用、費用の発生はありません。
+- テストスイートとすべての `quality_log.py` コマンドはオフラインです。
+- `generate`、`edit`、および `--dry-run` なしのバッチは、設定したプロバイダーを呼び出し、費用が発生する場合があります。
+- バッチの各項目は 1 回の API リクエストを行います。`n` はそのリクエスト内で要求する画像数です。ヘルパーが自動で再試行したりモデルを切り替えたりすることはありません。
+
 ## インストール
 
 リポジトリをクローンしてから、Codex のスキルディレクトリへコピーします。
@@ -36,6 +51,25 @@ Copy-Item -Path (Join-Path $source "*") -Destination $target -Recurse -Force
 ```
 
 Codex では `$image-generation` を指定して明示的に呼び出します。これはスキル参照であり、PowerShell の変数展開ではありません。Codex が説明から自動選択することもあります。
+
+## 更新と削除
+
+クローンしたリポジトリとインストール済みスキルを更新します。
+
+```powershell
+git -C .\image-generation pull --ff-only
+$source = Join-Path $PWD "image-generation"
+$target = Join-Path $HOME ".codex\skills\image-generation"
+New-Item -ItemType Directory -Force $target | Out-Null
+Copy-Item -Path (Join-Path $source "*") -Destination $target -Recurse -Force
+```
+
+この操作は現在のファイルをコピーしますが、上流で削除されたファイルは削除しません。クリーンインストールが必要な場合は、ローカルの変更を確認してバックアップしてから、インストール先ディレクトリを置き換えてください。スキルを削除するには次を実行します。
+
+```powershell
+$target = Join-Path $HOME ".codex\skills\image-generation"
+Remove-Item -LiteralPath $target -Recurse -Force
+```
 
 ## 設定
 
@@ -192,20 +226,25 @@ python .\scripts\quality_log.py due `
 - 署名付き画像 URL は API キーなしでダウンロードされます。プロバイダーが認証付きダウンロードを要求する場合は、base64 レスポンスを要求してください。
 - プロバイダー固有のモデル名、サイズ、品質値、レスポンス形式はプロバイダーの責任です。
 
-## テスト
+## 開発と検証
 
 ```powershell
 python -m unittest discover -s tests -v
 python -m py_compile .\scripts\image_api.py .\scripts\image_batch.py .\scripts\quality_log.py
 ```
 
-テストは外部サービスを呼び出さず、費用も発生しません。
+テストは外部サービスを呼び出さず、費用も発生しません。CI は Python 3.10 と 3.12 を確認します。開発手順と Pull Request の要件は [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
+
+## コントリビューション
+
+Issue と Pull Request のテンプレートを使用し、実際のプロバイダー確認を自動テストに含めず、Pull Request を作成する前に上記のオフライン検証コマンドを実行してください。参加時は [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) に従ってください。
 
 ## セキュリティ
 
 - `.env`、API キー、非公開の参照画像、クライアントの生成物をコミットしないでください。
 - `--api-key` で秘密情報を渡さないでください。環境変数を使用してください。
 - 機密資料を第三者の API に送信する前に、プロンプトを確認してください。
+- 脆弱性は公開 Issue ではなく [SECURITY.md](SECURITY.md) の手順で報告してください。
 
 ## ライセンス
 

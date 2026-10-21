@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a reproducible script, batch, output, or documentation defect.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Remove API keys, tokens, private image URLs, personal paths, and private image contents before submitting.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What failed, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction
+      description: Provide the exact command or a minimal sanitized JSONL record.
+      render: powershell
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed result
+      description: Include the exit code and sanitized error text. Do not paste credentials.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Python version, operating system, and provider shape if relevant.
+      placeholder: Python 3.12.13 on Windows 11; official multipart endpoint
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety checks
+      options:
+        - label: I removed credentials, private images, and confidential request data from this report.
+          required: true
+        - label: I searched existing issues for the same problem.
+          required: true

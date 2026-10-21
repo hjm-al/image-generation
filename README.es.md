@@ -2,6 +2,8 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
+[![validate](https://github.com/hjm-al/image-generation/actions/workflows/validate.yml/badge.svg)](https://github.com/hjm-al/image-generation/actions/workflows/validate.yml)
+
 Una habilidad independiente de Codex para generar y editar imágenes mediante APIs de Images compatibles con OpenAI. Gestiona la preparación de prompts, la carga segura de credenciales, la normalización de respuestas, la escritura de archivos locales, la detección de formatos, las dimensiones y los metadatos.
 
 ## Funciones
@@ -23,6 +25,19 @@ Una habilidad independiente de Codex para generar y editar imágenes mediante AP
 - Realiza un seguimiento de las revisiones reutilizables de prompts mediante eventos de calidad codificados, hashes de prompts y comprobaciones de regresión.
 - Ejecuta pruebas sin conexión y sin realizar solicitudes de red.
 
+## Requisitos
+
+- Python 3.10 o posterior.
+- No se necesitan paquetes de terceros; los asistentes, el ejecutor por lotes, el registro de calidad y las pruebas usan solo la biblioteca estándar de Python.
+- Solo las solicitudes facturables de generación o edición requieren acceso a la red y credenciales del proveedor.
+
+## Coste y comportamiento de red
+
+- `--dry-run` muestra la solicitud prevista sin leer la clave de API, usar la red ni generar costes.
+- La suite de pruebas y todos los comandos de `quality_log.py` funcionan sin conexión.
+- `generate`, `edit` y un lote sin `--dry-run` llaman al proveedor configurado y pueden generar costes.
+- Cada elemento del lote realiza una solicitud a la API; `n` es el número de imágenes solicitadas dentro de esa solicitud. El asistente nunca reintenta ni cambia de modelo automáticamente.
+
 ## Instalación
 
 Clona el repositorio y después copia su contenido al directorio de habilidades de Codex:
@@ -36,6 +51,25 @@ Copy-Item -Path (Join-Path $source "*") -Destination $target -Recurse -Force
 ```
 
 En Codex, invócala explícitamente con `$image-generation`; se trata de una referencia a la habilidad, no de una expansión de variables de PowerShell. Codex también puede seleccionarla a partir de su descripción.
+
+## Actualización o eliminación
+
+Actualiza el clon y la habilidad instalada:
+
+```powershell
+git -C .\image-generation pull --ff-only
+$source = Join-Path $PWD "image-generation"
+$target = Join-Path $HOME ".codex\skills\image-generation"
+New-Item -ItemType Directory -Force $target | Out-Null
+Copy-Item -Path (Join-Path $source "*") -Destination $target -Recurse -Force
+```
+
+Esto copia los archivos actuales, pero no elimina los archivos retirados upstream. Para una instalación limpia, revisa y guarda los cambios locales antes de reemplazar el directorio instalado. Para eliminar la habilidad:
+
+```powershell
+$target = Join-Path $HOME ".codex\skills\image-generation"
+Remove-Item -LiteralPath $target -Recurse -Force
+```
 
 ## Configuración
 
@@ -192,20 +226,25 @@ Si el proveedor devuelve un formato diferente, el asistente cambia la extensión
 - Las URL de imágenes firmadas se descargan sin la clave de API. Si un proveedor exige descargas autenticadas, solicita una respuesta base64.
 - Los nombres de modelos, tamaños, valores de calidad y formatos de respuesta específicos de cada proveedor son responsabilidad del proveedor.
 
-## Pruebas
+## Desarrollo y verificación
 
 ```powershell
 python -m unittest discover -s tests -v
 python -m py_compile .\scripts\image_api.py .\scripts\image_batch.py .\scripts\quality_log.py
 ```
 
-Las pruebas no llaman a servicios externos ni generan costes.
+Las pruebas no llaman a servicios externos ni generan costes. CI comprueba Python 3.10 y 3.12. Consulta [CONTRIBUTING.md](CONTRIBUTING.md) para el desarrollo y las Pull Requests.
+
+## Contribuciones
+
+Usa las plantillas de Issue y Pull Request, no incluyas comprobaciones reales del proveedor en las pruebas automatizadas y ejecuta los comandos de verificación sin conexión antes de abrir una Pull Request. La participación se rige por [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Seguridad
 
 - No confirmes `.env`, claves de API, imágenes de referencia privadas ni trabajos generados para clientes.
 - No pases secretos con `--api-key`; usa variables de entorno.
 - Revisa el prompt antes de enviar material confidencial a una API de terceros.
+- Informa de vulnerabilidades según [SECURITY.md](SECURITY.md), no en una Issue pública.
 
 ## Licencia
 

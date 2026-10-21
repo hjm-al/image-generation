@@ -2,6 +2,8 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [Español](README.es.md)
 
+[![validate](https://github.com/hjm-al/image-generation/actions/workflows/validate.yml/badge.svg)](https://github.com/hjm-al/image-generation/actions/workflows/validate.yml)
+
 一个独立的 Codex 技能，通过兼容 OpenAI 的 Images API 生成和编辑图片。它负责提示词准备、密钥安全加载、响应标准化、本地文件写入、格式检测、尺寸读取和元数据记录。
 
 ## 功能
@@ -23,6 +25,19 @@
 - 通过编码质量事件、提示词哈希和回归检查跟踪可复用提示词版本。
 - 运行离线测试，不发起网络请求。
 
+## 环境要求
+
+- Python 3.10 或更高版本。
+- 无需第三方包；辅助脚本、批处理器、质量日志工具和测试均只使用 Python 标准库。
+- 只有实际生成或编辑请求才需要网络连接和服务商凭据。
+
+## 费用与网络行为
+
+- `--dry-run` 只打印计划请求，不读取 API Key、不使用网络，也不会产生费用。
+- 测试套件和所有 `quality_log.py` 命令均为离线操作。
+- `generate`、`edit` 以及未使用 `--dry-run` 的批处理会调用配置的服务商，并可能产生费用。
+- 批处理中的每个条目会发起一次 API 请求；`n` 是该请求内要求的图片数量。脚本不会自动重试或切换模型。
+
 ## 安装
 
 克隆仓库后，将其复制到 Codex 技能目录：
@@ -36,6 +51,25 @@ Copy-Item -Path (Join-Path $source "*") -Destination $target -Recurse -Force
 ```
 
 在 Codex 中可使用 `$image-generation` 显式调用；这是技能引用，不是 PowerShell 变量展开。Codex 也可以根据描述自动选择该技能。
+
+## 更新或卸载
+
+更新已克隆的仓库和已安装技能：
+
+```powershell
+git -C .\image-generation pull --ff-only
+$source = Join-Path $PWD "image-generation"
+$target = Join-Path $HOME ".codex\skills\image-generation"
+New-Item -ItemType Directory -Force $target | Out-Null
+Copy-Item -Path (Join-Path $source "*") -Destination $target -Recurse -Force
+```
+
+这会复制当前文件，但不会删除上游已移除的文件。若需全新安装，请先检查并备份本地修改，再替换已安装目录。卸载技能：
+
+```powershell
+$target = Join-Path $HOME ".codex\skills\image-generation"
+Remove-Item -LiteralPath $target -Recurse -Force
+```
 
 ## 配置
 
@@ -192,20 +226,25 @@ python .\scripts\quality_log.py due `
 - 签名图片 URL 下载时不带 API Key。如果服务商要求鉴权下载，应改用 base64 响应。
 - 服务商特定的模型名称、尺寸、质量值和响应格式由服务商负责。
 
-## 测试
+## 开发与验证
 
 ```powershell
 python -m unittest discover -s tests -v
 python -m py_compile .\scripts\image_api.py .\scripts\image_batch.py .\scripts\quality_log.py
 ```
 
-测试不会调用外部服务，也不会产生费用。
+测试不会调用外部服务，也不会产生费用。CI 会检查 Python 3.10 和 3.12。开发流程和 Pull Request 要求参见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## 贡献
+
+请使用 Issue 和 Pull Request 模板，不要把真实服务商检查放进自动测试，并在提交 Pull Request 前运行上面的离线验证命令。参与项目时请遵守 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
 
 ## 安全
 
 - 不要提交 `.env`、API 密钥、私有参考图或客户生成物。
 - 不要通过 `--api-key` 传递密钥；请使用环境变量。
 - 向第三方 API 发送机密材料前，先审查提示词。
+- 安全问题请按 [SECURITY.md](SECURITY.md) 私密报告，不要发到公开 Issue。
 
 ## 许可证
 
