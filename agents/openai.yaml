@@ -1,0 +1,6 @@
+interface:
+  display_name: "图片生成"
+  short_description: "Generate and edit images through compatible APIs"
+  default_prompt: "Use $image-generation to create a production-ready image from my brief."
+policy:
+  allow_implicit_invocation: true
